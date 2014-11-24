@@ -1,0 +1,64 @@
+namespace word.count;
+
+type LineStat = tuple<int32 lines, int32 words>;
+type WordStat = tuple<rstring word, int32 count>;
+
+int32 countWords(rstring line) {
+
+	list<rstring> substrings = tokenize(line, " \t", false);
+	mutable map<rstring, int32> uniqueWords = {};
+	for (rstring s in substrings)
+	{
+		if (s in uniqueWords)
+		{
+			mutable int32 count = uniqueWords[s];
+			count++;
+			insertM(uniqueWords, s, count);
+		}
+		else
+		{
+			insertM(uniqueWords, s, 0);
+		}
+	}
+	return size(tokenize(line, " \t", false));
+	
+} // End of function countWords
+
+map<rstring, int32> getWordCount(rstring line)
+{
+	list<rstring> substrings = tokenize(line, " \t", false);
+	mutable map<rstring, int32> uniqueWords = {};
+	for (rstring s in substrings)
+	{
+		if (s in uniqueWords)
+		{
+			mutable int32 count = uniqueWords[s];
+			count++;
+			insertM(uniqueWords, s, count);
+		}
+		else
+		{
+			insertM(uniqueWords, s, 1);
+		}
+	}
+	
+	return uniqueWords;
+}
+
+//void addStat(mutable LineStat x, LineStat y) {
+//	x.lines += y.lines;
+//	x.words += y.words;
+//} // End of function addStat
+
+void addStat(mutable map<rstring, int32> x, WordStat y) {
+	if (y.word in x)
+	{
+		mutable int32 count = x[y.word];
+		count = count + y.count;
+		insertM(x, y.word, count);
+	}
+	else
+	{
+		insertM(x, y.word, y.count);
+	}
+} // End of function addStat

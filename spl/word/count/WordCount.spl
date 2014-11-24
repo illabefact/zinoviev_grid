@@ -1,0 +1,57 @@
+/*
+This example is the same code that can be found in the SPL introductory tutorial PDF file.
+Please see that PDF file for a description about what this application does.
+*/
+namespace word.count;
+
+composite WordCount {
+	graph
+		 stream <rstring filename> FilePath = DirectoryScan() {
+             param
+                 directory: getSubmissionTimeValue("dir");
+                 sleepTime: 3.0;
+                 initDelay: 3.0;                                   
+        }
+	
+	
+		stream <rstring lineContents> Data = FileSource(FilePath) {
+			param
+				format: line;
+				// file		: "catFood.txt"; 
+		} // End of FileSource.
+		
+//		stream <LineStat> OneLine = Functor(Data) {
+//			output
+//				OneLine: 
+//					lines = 1, words = countWords(lineContents);
+//		} // End of Functor.
+
+		stream <WordStat> OneLine = Custom(Data) {
+			logic
+				onTuple Data: {
+					map<rstring, int32> words = getWordCount(lineContents);
+					
+					for (rstring key in words)
+					{					
+						submit({word=key, count=words[key]}, OneLine);
+					}
+				}
+				
+		}
+		
+		() as Counter = Custom(OneLine) {
+			logic
+				state: mutable map<rstring, int32> res = {};
+				
+				onTuple OneLine: 
+					addStat (res, OneLine);
+
+				onPunct OneLine: {
+					if (currentPunct() == Sys.FinalMarker) 
+					{
+						for (rstring key in res)
+							println(key + " : " + (rstring)res[key]);
+					}
+				} // End of onPunct OneLine
+		} // End of Custom.
+} // End of WordCount.

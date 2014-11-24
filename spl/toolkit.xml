@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<toolkitModel xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkit" productVersion="3.2.1.0" xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <toolkit name="902_word_count" requiredProductVersion="2.0.0" version="1.0.0">
+    <description>Word Count example with its own namespace</description>
+    <uriTable>
+      <uri index="1" value="word/count/WordCount.spl"/>
+      <uri index="2" value="word/count/Helpers.spl"/>
+    </uriTable>
+    <namespace name="word.count">
+      <compositeOp column="11" line="7" name="WordCount" potentialMain="true" uriIndex="1"/>
+      <function column="1" line="6" name="countWords" native="false" returnType="int32" uriIndex="2">
+        <prototype>int32 countWords(rstring line)</prototype>
+        <parameter name="line" type="rstring"/>
+      </function>
+      <function column="1" line="27" name="getWordCount" native="false" returnType="map&lt;rstring, int32>" uriIndex="2">
+        <prototype>map&lt;rstring, int32&gt; getWordCount(rstring line)</prototype>
+        <parameter name="line" type="rstring"/>
+      </function>
+      <function column="1" line="53" name="addStat" native="false" returnType="void" uriIndex="2">
+        <prototype>void addStat(mutable map&lt;rstring, int32&gt; x, WordStat y)</prototype>
+        <parameter mutable="true" name="x" type="map&lt;rstring, int32>"/>
+        <parameter name="y" type="WordStat"/>
+      </function>
+      <type column="6" line="3" name="LineStat" static="true" type="tuple&lt;int32 lines, int32 words>" uriIndex="2"/>
+      <type column="6" line="4" name="WordStat" static="true" type="tuple&lt;rstring word, int32 count>" uriIndex="2"/>
+    </namespace>
+  </toolkit>
+
+</toolkitModel>
