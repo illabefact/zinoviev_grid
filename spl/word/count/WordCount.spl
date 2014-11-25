@@ -9,22 +9,18 @@ composite WordCount {
 		 stream <rstring filename> FilePath = DirectoryScan() {
              param
                  directory: getSubmissionTimeValue("dir");
-                 sleepTime: 3.0;
-                 initDelay: 3.0;                                   
+                 sleepTime: 10.0;
+                 initDelay: 1.0;                  
+                 pattern : ".*\\.txt$";                 
         }
 	
 	
-		stream <rstring lineContents> Data = FileSource(FilePath) {
+		stream <rstring lineContents, rstring fileName> Data = FileSource(FilePath) {			
 			param
 				format: line;
+				output Data: fileName = FileName();
 				// file		: "catFood.txt"; 
 		} // End of FileSource.
-		
-//		stream <LineStat> OneLine = Functor(Data) {
-//			output
-//				OneLine: 
-//					lines = 1, words = countWords(lineContents);
-//		} // End of Functor.
 
 		stream <WordStat> OneLine = Custom(Data) {
 			logic
@@ -33,25 +29,48 @@ composite WordCount {
 					
 					for (rstring key in words)
 					{					
-						submit({word=key, count=words[key]}, OneLine);
+						submit({file = Data.fileName, word=key, count=words[key]}, OneLine);
 					}
+				}
+				onPunct Data: {
+					println(currentPunct());
+					submit(currentPunct(), OneLine);
 				}
 				
 		}
 		
-		() as Counter = Custom(OneLine) {
+		stream <WordStat> WholeFile = Custom(OneLine) {
 			logic
-				state: mutable map<rstring, int32> res = {};
-				
-				onTuple OneLine: 
+				state: {
+					mutable map<rstring, int32> res = {};
+					mutable rstring fileName = "";
+				}
+				onTuple OneLine: {
+					fileName = OneLine.file;
 					addStat (res, OneLine);
+				}
 
 				onPunct OneLine: {
-					if (currentPunct() == Sys.FinalMarker) 
+					if (currentPunct() == Sys.WindowMarker) 
 					{
-						for (rstring key in res)
-							println(key + " : " + (rstring)res[key]);
+						for (rstring key in res) {
+							submit({file = fileName, word=key, count=res[key]}, WholeFile);
+							// println(fileName + " " + key + " : " + (rstring)res[key]);
+						}
+						submit(currentPunct(), WholeFile);
+						println("Stored file: " + fileName);
+						clearM(res);
+						fileName = "";
 					}
 				} // End of onPunct OneLine
 		} // End of Custom.
+		
+		() as FileSink2 = FileSink(WholeFile) {
+		    	param
+		    		append: true;
+		    		quoteStrings: false;
+		    		closeMode: dynamic; 
+		    		file: WholeFile.file + ".stat";
+					flush: 4u;
+		    }
 } // End of WordCount.

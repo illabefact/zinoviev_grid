@@ -1,7 +1,7 @@
 namespace word.count;
 
 type LineStat = tuple<int32 lines, int32 words>;
-type WordStat = tuple<rstring word, int32 count>;
+type WordStat = tuple<rstring file, rstring word, int32 count>;
 
 int32 countWords(rstring line) {
 
