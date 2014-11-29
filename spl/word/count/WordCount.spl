@@ -6,7 +6,9 @@ namespace word.count;
 
 composite WordCount {
 	graph
-		 stream <rstring filename> FilePath = DirectoryScan() {
+		//scans a directory with name given as command line arg.
+		//returns filenames of all txt files in dir
+		stream <rstring filename> FilePath = DirectoryScan() {
              param
                  directory: getSubmissionTimeValue("dir");
                  sleepTime: 10.0;
@@ -14,14 +16,16 @@ composite WordCount {
                  pattern : ".*\\.txt$";                 
         }
 	
-	
+		//reads a file with given filename
+		//returns tuple<rstring, rstring> with one read line of file and filename.
 		stream <rstring lineContents, rstring fileName> Data = FileSource(FilePath) {			
 			param
 				format: line;
 				output Data: fileName = FileName();
-				// file		: "catFood.txt"; 
-		} // End of FileSource.
-
+		}
+		
+		//counts words in one line and passes this counts to the next operator.
+		//if tuple is punctuation sign(end of file), operator just passes this puntuation to the next stream
 		stream <WordStat> OneLine = Custom(Data) {
 			logic
 				onTuple Data: {
@@ -39,6 +43,10 @@ composite WordCount {
 				
 		}
 		
+		//Cumulates statistic for one file.
+		//When operator gets a punctuation sign, which means end of file, 
+		//    it passes all cumulated statistic with the name of file to the next operator.
+		//    Then all internal state is erased for work with data of next file.
 		stream <WordStat> WholeFile = Custom(OneLine) {
 			logic
 				state: {
@@ -55,16 +63,18 @@ composite WordCount {
 					{
 						for (rstring key in res) {
 							submit({file = fileName, word=key, count=res[key]}, WholeFile);
-							// println(fileName + " " + key + " : " + (rstring)res[key]);
 						}
 						submit(currentPunct(), WholeFile);
 						println("Stored file: " + fileName);
 						clearM(res);
 						fileName = "";
 					}
-				} // End of onPunct OneLine
-		} // End of Custom.
+				}
+		}
 		
+		//Prints found statistic to the file.
+		//Unfortunately FileSink doesn't support any formatting, 
+		//    so besides needed statistics it also prints name of input file, which is part of input tuple.
 		() as FileSink2 = FileSink(WholeFile) {
 		    	param
 		    		append: true;
@@ -73,4 +83,4 @@ composite WordCount {
 		    		file: WholeFile.file + ".stat";
 					flush: 4u;
 		    }
-} // End of WordCount.
+}
