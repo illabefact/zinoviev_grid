@@ -7,7 +7,8 @@ type WordStat = tuple<rstring file, rstring word, int32 count>;
 //returns map<rstring, int32>, where key is the word and value - its' count.
 map<rstring, int32> getWordCount(rstring line)
 {
-	list<rstring> substrings = tokenize(line, " \t", false);
+	rstring lineInLower = lower(line);
+	list<rstring> substrings = tokenize(lineInLower, " \t\r\n\v\f.,!?;:\"&'", false);
 	mutable map<rstring, int32> uniqueWords = {};
 	for (rstring s in substrings)
 	{
@@ -31,14 +32,14 @@ map<rstring, int32> getWordCount(rstring line)
 //    map<rstring, int32> - already cumulated statistic
 //    WordStat - tuple containing one word and its' count
 void addStat(mutable map<rstring, int32> x, WordStat y) {
-	if (y.word in x)
-	{
-		mutable int32 count = x[y.word];
-		count = count + y.count;
-		insertM(x, y.word, count);
-	}
-	else
-	{
-		insertM(x, y.word, y.count);
-	}
-} // End of function addStat
+    if (y.word in x)
+    {
+        mutable int32 count = x[y.word];
+        count = count + y.count;
+        insertM(x, y.word, count);
+    }
+    else
+    {
+        insertM(x, y.word, y.count);
+    }
+}
