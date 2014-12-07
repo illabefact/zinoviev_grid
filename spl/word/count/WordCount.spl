@@ -15,82 +15,82 @@ composite WordCount {
         //reads a file with given filename
         //returns tuple<rstring, rstring> with one read line of file and filename.
         stream<rstring lineContents, rstring fileName> Data = FileSource(FilePath)
-		{
-			param
-				format : line ;
-			output
-				Data : fileName = FileName() ;
+        {
+            param
+                format : line ;
+            output
+                Data : fileName = FileName() ;
 
-		}
+        }
         
         //counts words in one line and passes this counts to the next operator.
         //if tuple is punctuation sign(end of file), operator just passes this puntuation to the next stream
-		stream<WordStat> OneLine = Custom(Data)
-		{
-			logic
-				onTuple Data :
-				{
-					map<rstring, int32> words = getWordCount(lineContents) ;
-					for(rstring key in words)
-					{
-						submit({ file = Data.fileName, word = key, count = words [ key ] },
-							OneLine) ;
-					}
-				}
+        stream<WordStat> OneLine = Custom(Data)
+        {
+            logic
+                onTuple Data :
+                {
+                    map<rstring, int32> words = getWordCount(lineContents) ;
+                    for(rstring key in words)
+                    {
+                        submit({ file = Data.fileName, word = key, count = words [ key ] },
+                            OneLine) ;
+                    }
+                }
 
-				onPunct Data :
-				{
-					println(currentPunct()) ;
-					submit(currentPunct(), OneLine) ;
-				}
-		}
+                onPunct Data :
+                {
+                    println(currentPunct()) ;
+                    submit(currentPunct(), OneLine) ;
+                }
+        }
         
         //Cumulates statistic for one file.
         //When operator gets a punctuation sign, which means end of file, 
         //    it passes all cumulated statistic with the name of file to the next operator.
         //    Then all internal state is erased for work with data of next file.
-		stream<WordStat> WholeFile = Custom(OneLine)
-		{
-			logic
-				state :
-				{
-					mutable map<rstring, int32> res = { } ;
-					mutable rstring fileName = "" ;
-				}
+        stream<WordStat> WholeFile = Custom(OneLine)
+        {
+            logic
+                state :
+                {
+                    mutable map<rstring, int32> res = { } ;
+                    mutable rstring fileName = "" ;
+                }
 
-				onTuple OneLine :
-				{
-					fileName = OneLine.file ;
-					addStat(res, OneLine) ;
-				}
+                onTuple OneLine :
+                {
+                    fileName = OneLine.file ;
+                    addStat(res, OneLine) ;
+                }
 
-				onPunct OneLine :
-				{
-					if(currentPunct() == Sys.WindowMarker)
-					{
-						for(rstring key in res)
-						{
-							submit({ file = fileName, word = key, count = res [ key ] },
-								WholeFile) ;
-						}
+                onPunct OneLine :
+                {
+                    if(currentPunct() == Sys.WindowMarker)
+                    {
+                        for(rstring key in res)
+                        {
+                            submit({ file = fileName, word = key, count = res [ key ] },
+                                WholeFile) ;
+                        }
 
-						submit(currentPunct(), WholeFile) ;
-						println("Stored file: " + fileName) ;
-						clearM(res) ;
-						fileName = "" ;
-					}
-				}
-		}
+                        submit(currentPunct(), WholeFile) ;
+                        println("Stored file: " + fileName) ;
+                        clearM(res) ;
+                        fileName = "" ;
+                    }
+                }
+        }
         
         //Prints found statistic to the file.
-		() as FileSink2 = FileSink(WholeFile)
-		{
-			param
-				append : true ;
-				quoteStrings : false ;
-				closeMode : dynamic ;
-				file : WholeFile.file + ".stat" ;
-				flush : 4u ;
-				suppress : WholeFile.file;
-		}
+        () as FileSink2 = FileSink(WholeFile)
+        {
+            param
+                append : true ;
+                quoteStrings : false ;
+                closeMode : dynamic ;
+                file : WholeFile.file + ".stat" ;
+                flush : 4u ;
+                suppress : WholeFile.file;
+        }
 }

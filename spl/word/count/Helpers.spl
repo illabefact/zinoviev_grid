@@ -7,24 +7,24 @@ type WordStat = tuple<rstring file, rstring word, int32 count>;
 //returns map<rstring, int32>, where key is the word and value - its' count.
 map<rstring, int32> getWordCount(rstring line)
 {
-	rstring lineInLower = lower(line);
-	list<rstring> substrings = tokenize(lineInLower, " \t\r\n\v\f.,!?;:\"&'", false);
-	mutable map<rstring, int32> uniqueWords = {};
-	for (rstring s in substrings)
-	{
-		if (s in uniqueWords)
-		{
-			mutable int32 count = uniqueWords[s];
-			count++;
-			insertM(uniqueWords, s, count);
-		}
-		else
-		{
-			insertM(uniqueWords, s, 1);
-		}
-	}
-	
-	return uniqueWords;
+    rstring lineInLower = lower(line);
+    list<rstring> substrings = tokenize(lineInLower, " \t\r\n\v\f.,!?;:\"&'", false);
+    mutable map<rstring, int32> uniqueWords = {};
+    for (rstring s in substrings)
+    {
+        if (s in uniqueWords)
+        {
+            mutable int32 count = uniqueWords[s];
+            count++;
+            insertM(uniqueWords, s, count);
+        }
+        else
+        {
+            insertM(uniqueWords, s, 1);
+        }
+    }
+    
+    return uniqueWords;
 }
 
 //addStat function is used to cumulate statistics of words.
