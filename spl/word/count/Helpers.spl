@@ -43,3 +43,28 @@ void addStat(mutable map<rstring, int32> x, WordStat y) {
         insertM(x, y.word, y.count);
     }
 }
+
+rstring getKeyOfMaxValue(map<rstring, int32> x)
+{	
+	mutable rstring res = "";
+	mutable int32 max = 0;
+	for (rstring key in x)
+	{
+		if (x[key] > max)
+		{
+			max = x[key];
+			res = key;
+		}
+	}
+	return res;
+}
+
+int32 getMapSize(map<rstring, int32> x)
+{
+	mutable int32 res = 0;
+	for (rstring key in x)
+	{
+		res = res + 1;
+	}
+	return res;
+}

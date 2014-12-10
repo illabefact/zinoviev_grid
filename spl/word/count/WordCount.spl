@@ -68,15 +68,17 @@ composite WordCount {
                 {
                     if(currentPunct() == Sys.WindowMarker)
                     {
-                        for(rstring key in res)
-                        {
-                            submit({ file = fileName, word = key, count = res [ key ] },
-                                WholeFile) ;
-                        }
+                        mutable int32 count = getMapSize(res);
+						while (count > 0)
+						{
+							rstring key = getKeyOfMaxValue(res);
+							submit({ file = fileName, word = key, count = res [ key ] }, WholeFile) ;
+							removeM(res, key);
+							count = count - 1;
+						}
 
                         submit(currentPunct(), WholeFile) ;
                         println("Stored file: " + fileName) ;
-                        clearM(res) ;
                         fileName = "" ;
                     }
                 }
