@@ -68,22 +68,11 @@ composite WordCount {
                 {
                     if(currentPunct() == Sys.WindowMarker)
                     {
-                        mutable list<int32> values = [];
-						
-						for (rstring key in res)
-						{
-							appendM(values, res[key]);
-						}
-						
-						sortM(values);				
-						reverseM(values);
-						
-						for (int32 value in values)
-						{
-							rstring key = getKeyByValue(res, value);
-							submit({ file = fileName, word = key, count = value }, WholeFile) ;
-							removeM(res, key);
-						}
+                        for(rstring key in res)
+                        {
+                            submit({ file = fileName, word = key, count = res [ key ] },
+                                WholeFile) ;
+                        }
 
                         submit(currentPunct(), WholeFile) ;
                         println("Stored file: " + fileName) ;
@@ -92,15 +81,24 @@ composite WordCount {
                 }
         }
         
+        stream<WordStat> Sorted = Sort(WholeFile)
+        {
+            window
+                WholeFile : tumbling, punct() ;
+            param
+                sortBy : count;
+                order : descending;
+        }
+        
         //Prints found statistic to the file.
-        () as FileSink2 = FileSink(WholeFile)
+        () as FileSink2 = FileSink(Sorted)
         {
             param
                 append : true ;
                 quoteStrings : false ;
                 closeMode : dynamic ;
-                file : WholeFile.file + ".stat" ;
+                file : Sorted.file + ".stat" ;
                 flush : 4u ;
-                suppress : WholeFile.file;
+                suppress : Sorted.file;
         }
 }
