@@ -68,13 +68,21 @@ composite WordCount {
                 {
                     if(currentPunct() == Sys.WindowMarker)
                     {
-                        mutable int32 count = getMapSize(res);
-						while (count > 0)
+                        mutable list<int32> values = [];
+						
+						for (rstring key in res)
 						{
-							rstring key = getKeyOfMaxValue(res);
-							submit({ file = fileName, word = key, count = res [ key ] }, WholeFile) ;
+							appendM(values, res[key]);
+						}
+						
+						sortM(values);				
+						reverseM(values);
+						
+						for (int32 value in values)
+						{
+							rstring key = getKeyByValue(res, value);
+							submit({ file = fileName, word = key, count = value }, WholeFile) ;
 							removeM(res, key);
-							count = count - 1;
 						}
 
                         submit(currentPunct(), WholeFile) ;

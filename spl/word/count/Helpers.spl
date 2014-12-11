@@ -44,27 +44,12 @@ void addStat(mutable map<rstring, int32> x, WordStat y) {
     }
 }
 
-rstring getKeyOfMaxValue(map<rstring, int32> x)
+rstring getKeyByValue(map<rstring, int32> x, int32 value)
 {	
-	mutable rstring res = "";
-	mutable int32 max = 0;
 	for (rstring key in x)
 	{
-		if (x[key] > max)
-		{
-			max = x[key];
-			res = key;
-		}
+		if (x[key] == value)
+			return key;
 	}
-	return res;
-}
-
-int32 getMapSize(map<rstring, int32> x)
-{
-	mutable int32 res = 0;
-	for (rstring key in x)
-	{
-		res = res + 1;
-	}
-	return res;
+	return "";
 }
